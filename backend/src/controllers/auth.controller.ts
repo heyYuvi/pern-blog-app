@@ -2,7 +2,7 @@ import type { Request, Response } from "express"
 import { registerSchema, type RegisterInput } from "../utils/validators.js"
 import { prisma } from "../config/database.js";
 import bcrypt from "bcryptjs";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { sendEmail } from "../services/emailService.js";
 
 export const register = async (req: Request, res: Response) => {
@@ -32,30 +32,29 @@ export const register = async (req: Request, res: Response) => {
 
         const hashedPassowrd = await bcrypt.hash(bodyData.password, 14);
 
-        const verificationToken = randomBytes(32).toString('hex');
+        const verificationToken = randomBytes(32).toString("hex");
+
+        const hashedVerificationToken = createHash('sha256').update(verificationToken).digest('hex');
 
         const verificationTokenExpiry = new Date(
-            Date.now() + 1000 * 60 * 60    // 1 sec + 1 min + 1 hour
+            Date.now() + 1000 * 60 * 60
         )
-
-        await sendEmail(
-            bodyData.email,
-            "Email Verification",
-            `<h1>Email Verification</h1>
-            <p>Your verification token is:</p>
-            <strong>${verificationToken}</strong>`
-        );
 
         await prisma.user.create({
             data: {
                 name: bodyData.name,
                 email: bodyData.email,
                 password: hashedPassowrd,
-                verificationToken: verificationToken,
+                verificationToken: hashedVerificationToken,
                 verificationTokenExpiry: verificationTokenExpiry
 
             }
         });
+
+        sendEmail(bodyData.email, `Email Verification for the Blog Platform`, `<h1>Email Verification</h1>
+            <p>Your verification token is: </p>
+            <strong>${verificationToken}</strong>
+            `);
 
         return res.status(201).json({
             success: true,
@@ -68,4 +67,56 @@ export const register = async (req: Request, res: Response) => {
             message: "Internal Server Error"
         });
     }
+}
+
+// Verify Hashed Token
+
+export const emailVerification = async (req: Request, res: Response) =>{
+
+    const verifyEmail  = req.params.verifyEmail as string ;
+    if(!verifyEmail){
+        return res.status(400).json({
+            success: false,
+            message: "Please provide a verification token"
+        });
+    }
+
+    const hashVerifyEmail = createHash('sha256').update(verifyEmail).digest('hex');
+
+
+    const user = await prisma.user.findFirst({
+        where: {
+            verificationToken: hashVerifyEmail
+        }
+    });
+
+    if(!user){
+        return res.status(400).json({
+            succss: false,
+            message: "Invalid Verification Token"
+        });
+    }
+
+    if(!user.verificationTokenExpiry || user.verificationTokenExpiry < new Date()){
+        return res.status(400).json({
+            success: false,
+            message: "Verification Token has expired"
+        })
+    }
+
+    await prisma.user.update({
+        where: {
+            id: user.id
+        },
+        data:{
+            isVerified: true,
+            verificationToken: null,
+            verificationTokenExpiry: null
+        }
+    });
+
+    return res.json({
+        success: true,
+        message: "Email Verified Succesfully"
+    });
 }
