@@ -30,3 +30,11 @@ export const loginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+
+export const resendVerificationTokenSchema = z.object({
+    email: z.
+    string().
+    toLowerCase().
+    email("Invalid Email Address")
+});
+export type ResendVerificationTokenInput = z.infer<typeof resendVerificationTokenSchema>;
