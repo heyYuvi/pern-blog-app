@@ -37,4 +37,5 @@ export const resendVerificationTokenSchema = z.object({
     toLowerCase().
     email("Invalid Email Address")
 });
+
 export type ResendVerificationTokenInput = z.infer<typeof resendVerificationTokenSchema>;
