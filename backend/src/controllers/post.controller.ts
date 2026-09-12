@@ -1,8 +1,8 @@
-import type { Request, Response} from "express";
+import type { Request, response, Response} from "express";
 import { createPostSchema, updatePostSchema, type CreatePostInput, type UpdatePostInput } from "../utils/validators.js";
 import { createUniqueSlug } from "../utils/slugify.js";
-import { prisma } from "../config/database.js";
-import { string } from "zod";
+import { prisma } from "../config/database.config.js";
+import { uploadImage } from "../services/cloudinary.service.js";
 
 // Create Post
 
@@ -18,6 +18,14 @@ export const createPost = async (req: Request, res: Response) =>{
         });
     }
 
+    let imageUrl = null;
+
+    if(req.file){
+        const result = await uploadImage(req.file.buffer);
+        imageUrl = result.secure_url;
+        console.log(imageUrl);
+    }
+
     const bodyData: CreatePostInput = data;
     
     const slug = createUniqueSlug(bodyData.title);
@@ -27,6 +35,7 @@ export const createPost = async (req: Request, res: Response) =>{
             title: bodyData.title,
             slug: slug,
             description: bodyData.description ?? null,
+            image: imageUrl,
             authorId: req.user.id
         },
         include: {
@@ -49,6 +58,7 @@ export const createPost = async (req: Request, res: Response) =>{
                 title: post.title,
                 slug: post.slug,
                 description: post.description,
+                image: post.image,
                 author: {
                     id: post.author.id,
                     name: post.author.name,
@@ -279,5 +289,5 @@ export const updatePost = async (req: Request, res: Response) =>{
             createdAt: post.createdAt,
             updatedAt: post.updatedAt
         }
-    })
+    });
 }

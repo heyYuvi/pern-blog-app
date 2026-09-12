@@ -1,6 +1,6 @@
 import type { Request, Response } from "express"
 import { loginSchema, registerSchema, resendVerificationTokenSchema, type LoginInput, type RegisterInput, type ResendVerificationTokenInput } from "../utils/validators.js"
-import { prisma } from "../config/database.js";
+import { prisma } from "../config/database.config.js";
 import bcrypt from "bcryptjs";
 import { createHash, randomBytes } from "node:crypto";
 import { sendEmail } from "../services/email.service.js";
