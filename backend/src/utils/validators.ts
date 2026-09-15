@@ -69,3 +69,14 @@ export const updatePostSchema = z.object({
 });
 
 export type UpdatePostInput = z.infer<typeof updatePostSchema>;
+
+export const commentSchema = z.object({
+    content: z
+    .string()
+    .trim()
+    .max(100, "Comment Should not exceeds 100 characters")
+});
+
+
+export type CommentInput = z.infer<typeof commentSchema>;
+
