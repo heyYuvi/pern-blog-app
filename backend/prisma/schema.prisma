@@ -24,9 +24,26 @@ model User{
   verificationTokenExpiry DateTime?   
 
   posts Post[]
+
+  followers Follow[] @relation("followers")
+  followings Follow[] @relation("followings")
+
+  likes like[]
   comments Comment[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Follow{
+  id Int @id @default(autoincrement())
+
+  followerId Int 
+  followingId Int 
+
+  follower User @relation("followers", fields: [followerId], references: [id])
+  following User @relation("followings", fields: [followingId], references: [id]) 
+
+  @@unique([followerId, followingId])
 }
 
 model Post{
@@ -37,10 +54,20 @@ model Post{
   image String?
   authorId Int
 
+  likes like[]
   comments Comment[]
   author User @relation(fields: [authorId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model like{
+  id Int @id @default(autoincrement())
+  authorId Int 
+  postId Int
+  author User @relation(fields: [authorId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+  @@unique([authorId, postId])
 }
 
 model Comment{

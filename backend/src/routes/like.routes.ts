@@ -1,0 +1,9 @@
+import { Router } from "express";
+import protect from "../middlewares/auth.middleware.js";
+import { toggleLike } from "../controllers/like.controller.js";
+
+const router = Router();
+
+router.put("/toggleLike/:id", protect, toggleLike);
+
+export default router;

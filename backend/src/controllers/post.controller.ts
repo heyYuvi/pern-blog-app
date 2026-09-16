@@ -115,6 +115,11 @@ export const getGlobalPosts  = async (req: Request, res: Response) =>{
                     avatar: true,
                     name: true
                 }
+            },
+            likes: {
+                select: {
+                    authorId: true
+                }
             }
         },
         orderBy: {
@@ -123,6 +128,7 @@ export const getGlobalPosts  = async (req: Request, res: Response) =>{
         skip,
         take: limitNumber
         });
+
 
         const totalPosts = await prisma.post.count({
             where: {
@@ -165,6 +171,10 @@ export const getGlobalPosts  = async (req: Request, res: Response) =>{
                 avatar: post.author.avatar,
                 name: post.author.name
             },
+            likes: post.likes.length,
+            likedByMe: post.likes.some((like) =>(
+                like.authorId === req.user.id
+            )),
             createdAt: post.createdAt,
             updatedAt: post.updatedAt
         }))
@@ -195,6 +205,11 @@ export const getSinglePost = async (req: Request, res: Response) =>{
                     name: true,
                     avatar: true
                 }
+            },
+            likes: {
+                select: {
+                    authorId: true
+                }
             }
         }
     });
@@ -219,6 +234,10 @@ export const getSinglePost = async (req: Request, res: Response) =>{
                 avatar: post.author.avatar,
                 name: post.author.name
             },
+            likes: post.likes.length,
+            likedByMe: post.likes.some((like) =>(
+                like.authorId === req.user.id
+            )),
             createdAt: post.createdAt,
             updatedAt: post.updatedAt
         }
