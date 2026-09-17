@@ -283,18 +283,35 @@ export const logout = (req: Request, res: Response) =>{
     })
 }
 
-export const getMe = (req: Request, res: Response) =>{
+export const getMe = async (req: Request, res: Response) =>{
+
+    const follows = await prisma.follow.findMany();
+
+console.log(follows);
+const user = await prisma.user.findUnique({
+  where: {
+    id: req.user.id
+  },
+  include: {
+    followers: true,
+    following: true
+  }
+});
+
+console.log("FOLLOWERS:", user?.followers);
+console.log("FOLLOWING:", user?.following);
 
     return res.json({
-        succss: true,
+        success: true,
+        message: "Data Fetched",
         data: {
-            id: req.user.id,
-            name: req.user.name,
-            avatar: req.user.avatar,
-            email: req.user.email,
-            isVerified: req.user.isVerified,
-            createdAt: req.user.createdAt,
-            updatedAt: req.user.updatedAt
+            id: user?.id,
+            name: user?.name,
+            avatar: user?.avatar,
+            email: user?.email,
+            isVerified: user?.isVerified,
+            followers: user?.followers.length,
+            following: user?.following.length
         }
-    })
+    });
 }

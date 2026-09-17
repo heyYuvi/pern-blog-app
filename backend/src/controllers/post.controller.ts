@@ -188,6 +188,100 @@ export const getGlobalPosts  = async (req: Request, res: Response) =>{
     }
 }
 
+
+// Get post based on following
+
+export const feed = async (req: Request, res: Response) =>{
+    try{
+        
+    const { page, limit } = req.query;
+
+    const pageNumber = Number(page) || 1;
+    const limitNumber = Number(limit) || 4;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const following = await prisma.follow.findMany({
+        where: {
+            followerId: req.user.id
+        },
+        select: {
+            followingId: true
+        }
+    });
+
+    const followingIds = following.map((follow) =>(follow.followingId));
+
+    const posts = await prisma.post.findMany({
+        where: {
+            authorId: {
+                in: [...followingIds, req.user.id]
+            }
+        },
+        include: {
+            author: {
+                select: {
+                    id: true,
+                    avatar: true,
+                    name: true,
+                    email: true,
+                }
+            },
+            likes: {
+                select: {
+                    authorId: true
+                }
+            }
+        },
+        orderBy: {
+            createdAt: "desc"
+        },
+        skip,
+        take: limitNumber
+    });
+
+    const totalPosts = await prisma.post.count({
+        where: {
+            authorId: {
+                in: [...followingIds, req.user.id]
+            }
+        }
+    });
+
+    return res.json({
+        success: true,
+        pagination: {
+            page: pageNumber,
+            limit: limitNumber,
+            total: totalPosts,
+            totalPages: Math.ceil(totalPosts / limitNumber)
+        },
+        data: posts.map((post) =>({
+            id: post.id,
+            title: post.title,
+            description: post.description,
+            image: post.image,
+            slug: post.slug,
+            likes: post.likes.length,
+            likedByMe: post.likes.some((like) =>(like.authorId === req.user.id)),
+            createdAt: post.createdAt,
+            updatedAt: post.updatedAt,
+            author: {
+                id: post.author.id,
+                avatar: post.author.avatar,
+                name: post.author.name,
+                email: post.author.email
+            }
+        }))
+    });
+    }catch(error){
+        console.error("Get Feed error ", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+}
+
 // Get single Post
 
 export const getSinglePost = async (req: Request, res: Response) =>{
