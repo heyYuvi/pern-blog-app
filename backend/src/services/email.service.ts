@@ -32,11 +32,6 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
             html
         });
 
-
-        console.log("TO:", to);
-        console.log("FROM:", process.env.SMTP_USER);
-        console.log("MESSAGE ID:", info.messageId);
-
         return info;
     } catch (error) {
         console.error("Error while sending mail", error);
