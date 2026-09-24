@@ -2,6 +2,7 @@ import { useState, type ChangeEvent, type SubmitEvent } from "react";
 import api from "../services/api";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
 
 
 interface LoginInput {
@@ -12,7 +13,9 @@ interface LoginInput {
 const Login = () =>{
 
     const navigate = useNavigate();
-
+    
+    const { setUser } = useAuth();
+    
     const [form, setForm] = useState<LoginInput>({
         email: "",
         password: ""
@@ -29,6 +32,7 @@ const Login = () =>{
         }));
     }
 
+
     const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) =>{
         e.preventDefault();
         setLoading(true);
@@ -40,7 +44,9 @@ const Login = () =>{
                 password: ""
             });
             const { data } = await api.get("/auth/getme");
-            console.log(data);
+            setUser(data.data);
+            console.log(data.data);
+            
             navigate("/");
         }catch(error){
             if(isAxiosError(error)){
