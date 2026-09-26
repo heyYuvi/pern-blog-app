@@ -8,6 +8,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import CreatePost from './pages/CreatePost'
 import { Toaster } from 'react-hot-toast'
 import GlobalFeed from './pages/GlobalFeed'
+import UpdatePost from './pages/UpdatePost'
 
 function App() {
 
@@ -21,6 +22,7 @@ function App() {
       <Route path='/' element={<ProtectedRoute><Home /></ProtectedRoute>} />
       <Route path='/post' element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
       <Route path='/global/feed' element={<ProtectedRoute><GlobalFeed /></ProtectedRoute>} />
+      <Route path='/post/update/:id' element={<UpdatePost />} />
     </Routes>
     </>
   )

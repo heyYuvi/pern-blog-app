@@ -24,9 +24,6 @@ export const addComment = async (req: Request, res: Response) => {
         }
 
         const bodyData: CommentInput = data;
-
-        console.log(req.user);
-
         const user = await prisma.user.findUnique({
             where: {
                 id: req.user.id
@@ -64,6 +61,7 @@ export const addComment = async (req: Request, res: Response) => {
                     select: {
                         id: true,
                         name: true,
+                        avatar: true,
                         email: true
                     }
                 }
@@ -73,8 +71,21 @@ export const addComment = async (req: Request, res: Response) => {
         return res.status(201).json({
             success: true,
             message: "Comment Added",
-            comment
-        });
+            content: comment.content,
+            data: {
+                id: comment.id,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                updatedAt: comment.updatedAt,
+                postId: comment.postId,
+                author: {
+                    id: comment.author.id,
+                    name: comment.author.name,
+                    avatar: comment.author.avatar,
+                    email: comment.author.email
+                }
+            } }
+        );
     } catch (error) {
         console.error("Create Comment error ", error);
         return res.status(500).json({
@@ -118,6 +129,7 @@ export const getComments = async (req: Request, res: Response) => {
                 author: {
                     select: {
                         id: true,
+                        avatar: true,
                         name: true,
                         email: true
                     }
@@ -130,7 +142,19 @@ export const getComments = async (req: Request, res: Response) => {
 
         return res.json({
             success: true,
-            comments
+            data: comments.map((comment) => ({
+                id: comment.id,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                updatedAt: comment.updatedAt,
+                postId: comment.postId,
+                author: {
+                    id: comment.author.id,
+                    name: comment.author.name,
+                    avatar: comment.author.avatar,
+                    email: comment.author.email
+                }
+            }))
         });
     } catch (error) {
         console.error("Get Comments error ", error);
@@ -143,53 +167,53 @@ export const getComments = async (req: Request, res: Response) => {
 
 // Delete Comment
 
-export const deleteComment = async (req: Request, res: Response) =>{
-    try{
-        
-    const { postId: postIdString, commentId: commentIdString } = req.params;
+export const deleteComment = async (req: Request, res: Response) => {
+    try {
 
-    const postId = Number(postIdString);
-    const commentId = Number(commentIdString);
-    
-    if(isNaN(postId) || isNaN(commentId)){
-        return res.status(400).json({
-            success: false,
-            message: "Invalid Post or Comment Id"
-        });
-    }
+        const { postId: postIdString, commentId: commentIdString } = req.params;
 
-    const comment = await prisma.comment.findUnique({
-        where: {
-            id: commentId,
-            postId: postId
+        const postId = Number(postIdString);
+        const commentId = Number(commentIdString);
+
+        if (isNaN(postId) || isNaN(commentId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Post or Comment Id"
+            });
         }
-    });
 
-    if(!comment){
-        return res.status(404).json({
-            success: false,
-            message: "Comment Not Found"
+        const comment = await prisma.comment.findUnique({
+            where: {
+                id: commentId,
+                postId: postId
+            }
         });
-    }
 
-    if(comment.authorId !== req.user.id){
-        return res.status(403).json({
-            success: false,
-            message: "Not Allowed"
-        });
-    }
-
-    await prisma.comment.delete({
-        where: {
-            id: commentId
+        if (!comment) {
+            return res.status(404).json({
+                success: false,
+                message: "Comment Not Found"
+            });
         }
-    });
 
-    return res.json({
-        success: true,
-        message: "Comment Deleted"
-    });
-    }catch(error){
+        if (comment.authorId !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: "Not Allowed"
+            });
+        }
+
+        await prisma.comment.delete({
+            where: {
+                id: commentId
+            }
+        });
+
+        return res.json({
+            success: true,
+            message: "Comment Deleted"
+        });
+    } catch (error) {
         console.error("Delete Comment error ", error);
         return res.status(500).json({
             success: false,

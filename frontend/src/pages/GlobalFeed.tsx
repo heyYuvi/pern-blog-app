@@ -1,6 +1,10 @@
 import { useEffect, useState, type ChangeEvent } from "react";
 import api from "../services/api";
 import { isAxiosError } from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
+import toast from "react-hot-toast";
+import Comments from "../components/Comments";
 
 
 interface Author {
@@ -31,11 +35,17 @@ interface PaginationResponse {
 }
 
 const GlobalFeed = () => {
+
+    const navigate = useNavigate();
+
+    const { user } = useAuth();
+ 
     const [posts, setPosts] = useState<PostResponse[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [search, setSearch] = useState<string>("");
     const [page, setPage] = useState<number>(1);
     const [pagination, setPagination] = useState<PaginationResponse | null>(null);
+    const [showComments, setShowComments] = useState<number | null>(null);
 
     const pageNumbers: number[] = [];
 
@@ -43,6 +53,27 @@ const GlobalFeed = () => {
     for(let i=1; i<=pagination?.totalPages; i++){
         pageNumbers.push(i);
     }
+    }
+
+    const handleDelete = async (id: number) =>{
+        toast((t) =>(
+            <div>
+                <p>Are You Sure You Want To Delete This Post?</p>
+                <button onClick={ async() =>{
+                    toast.dismiss(t.id)
+                    await api.delete(`/post/${id}`);
+                    setPosts((prevPosts) =>
+                        prevPosts.filter((post) =>Number(post.id) != id)
+                    );
+                    toast.success("Post Deleted Successfully")
+                }}>
+                    Yes
+                </button>
+                <button onClick={() =>{toast.dismiss(t.id)}}>
+                    Cancle
+                </button>
+            </div>
+        ))
     }
 
     useEffect(() => {
@@ -89,6 +120,17 @@ const GlobalFeed = () => {
                     <h2>{post.author.name}</h2>
                     {new Date(post.createdAt).toLocaleDateString()}
                     {new Date(post.updatedAt).toLocaleDateString()}
+                    <div>
+                        {user?.id && (<button onClick={() =>{navigate(`/post/update/${post.id}`)}}>Update</button>)}
+                        {user?.id && (<button onClick={() =>{handleDelete(Number(post.id))}}>Delete</button>)}
+                    </div>
+                    <div>
+                        <button onClick={() =>{setShowComments(
+                            showComments === Number(post.id)? null : Number(post.id)
+                        )}}>{showComments === Number(post.id)? "Hide" : "show"}</button>
+
+                        {showComments === Number(post.id) && (<Comments postId={Number(post.id)} />)}
+                    </div>
                 </div>
             ))}
             <div>

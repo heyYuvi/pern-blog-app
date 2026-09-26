@@ -25,7 +25,7 @@ export const register = async (req: Request, res: Response) => {
         });
 
         if (userExists) {
-            if(!userExists.isVerified){
+            if (!userExists.isVerified) {
                 return res.status(400).json({
                     success: false,
                     message: "User is already registered. Please verifiy your email or request a new verification link."
@@ -76,10 +76,10 @@ export const register = async (req: Request, res: Response) => {
 
 // Verify Hashed Token
 
-export const emailVerification = async (req: Request, res: Response) =>{
+export const emailVerification = async (req: Request, res: Response) => {
 
-    const verifyEmail  = req.params.verifyEmail as string ;
-    if(!verifyEmail){
+    const verifyEmail = req.params.verifyEmail as string;
+    if (!verifyEmail) {
         return res.status(400).json({
             success: false,
             message: "Please provide a verification token"
@@ -95,14 +95,14 @@ export const emailVerification = async (req: Request, res: Response) =>{
         }
     });
 
-    if(!user){
+    if (!user) {
         return res.status(400).json({
             succss: false,
             message: "Invalid Verification Token"
         });
     }
 
-    if(!user.verificationTokenExpiry || user.verificationTokenExpiry < new Date()){
+    if (!user.verificationTokenExpiry || user.verificationTokenExpiry < new Date()) {
         return res.status(400).json({
             success: false,
             message: "Verification Token has expired"
@@ -113,7 +113,7 @@ export const emailVerification = async (req: Request, res: Response) =>{
         where: {
             id: user.id
         },
-        data:{
+        data: {
             isVerified: true,
             verificationToken: null,
             verificationTokenExpiry: null
@@ -128,137 +128,137 @@ export const emailVerification = async (req: Request, res: Response) =>{
 
 // Resend Token 
 
-export const resendVerificationToken = async (req: Request, res: Response) =>{
-    try{
-        
-    const { success, data, error } = resendVerificationTokenSchema.safeParse(req.body);
-    if(!success){
-        return res.status(400).json({
-            success: false,
-            error: error.issues
-        });
-    }
+export const resendVerificationToken = async (req: Request, res: Response) => {
+    try {
 
-    const bodyData: ResendVerificationTokenInput = data;
-
-    const user = await prisma.user.findUnique({
-        where: {
-            email: bodyData.email
+        const { success, data, error } = resendVerificationTokenSchema.safeParse(req.body);
+        if (!success) {
+            return res.status(400).json({
+                success: false,
+                error: error.issues
+            });
         }
-    });
 
-    if(!user){
-        return res.status(403).json({
-            success: false,
-            message: "User Not Found."
+        const bodyData: ResendVerificationTokenInput = data;
+
+        const user = await prisma.user.findUnique({
+            where: {
+                email: bodyData.email
+            }
         });
-    }
 
-    if(user.isVerified){
-        return res.status(400).json({
-            success: false,
-            message: "Email is already verified"
-        });
-    }
-
-    const emailVerificationToken = randomBytes(32).toString("hex"); 
-
-    const hashedVerificationToken = createHash("sha256").update(emailVerificationToken).digest("hex");
-
-    const verificationTokenExpiry = new Date(
-        Date.now() + 1000 * 60 * 60
-    );
-
-    await prisma.user.update({
-        where: {
-            email: bodyData.email
-        },
-        data:{
-            verificationToken: hashedVerificationToken,
-            verificationTokenExpiry: verificationTokenExpiry
+        if (!user) {
+            return res.status(403).json({
+                success: false,
+                message: "User Not Found."
+            });
         }
-    }); 
 
-    await sendEmail(bodyData.email, `Email Verification for the Blog Platform`, `<h1>Email Verification</h1>
+        if (user.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is already verified"
+            });
+        }
+
+        const emailVerificationToken = randomBytes(32).toString("hex");
+
+        const hashedVerificationToken = createHash("sha256").update(emailVerificationToken).digest("hex");
+
+        const verificationTokenExpiry = new Date(
+            Date.now() + 1000 * 60 * 60
+        );
+
+        await prisma.user.update({
+            where: {
+                email: bodyData.email
+            },
+            data: {
+                verificationToken: hashedVerificationToken,
+                verificationTokenExpiry: verificationTokenExpiry
+            }
+        });
+
+        await sendEmail(bodyData.email, `Email Verification for the Blog Platform`, `<h1>Email Verification</h1>
         <p>Your Verification Token is: </p>
         <strong>${emailVerificationToken}</strong>
         `)
 
-    return res.json({
-        success: true,
-        message: "Email Send Successfully"
-    });
-    }catch(error){
+        return res.json({
+            success: true,
+            message: "Email Send Successfully"
+        });
+    } catch (error) {
         console.error("Resend Email Verification error: ", error);
         return res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
-    }    
+    }
 }
 
 // Login
 
-export const login = async (req: Request, res: Response) =>{
-    try{
-        
-    const { success, data, error } = loginSchema.safeParse(req.body);
+export const login = async (req: Request, res: Response) => {
+    try {
 
-    if(!success){
-        return res.status(400).json({
-            success: false,
-            error: error.issues
-        });
-    }
+        const { success, data, error } = loginSchema.safeParse(req.body);
 
-    const bodyData: LoginInput = data;
-
-    const user = await prisma.user.findUnique({
-        where: {
-            email: bodyData.email
+        if (!success) {
+            return res.status(400).json({
+                success: false,
+                error: error.issues
+            });
         }
-    });
 
-    if(!user){
-        return res.status(401).json({
-            success: false,
-            message: "Invalid Email or Password"
+        const bodyData: LoginInput = data;
+
+        const user = await prisma.user.findUnique({
+            where: {
+                email: bodyData.email
+            }
         });
-    }
 
-    if(!user.isVerified){
-        return res.status(403).json({
-            success: false,
-            message: "Please verify your email."
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid Email or Password"
+            });
+        }
+
+        if (!user.isVerified) {
+            return res.status(403).json({
+                success: false,
+                message: "Please verify your email."
+            });
+        }
+
+        const isMatchPassword = await bcrypt.compare(bodyData.password, user.password);
+        if (!isMatchPassword) {
+            return res.status(401).json({
+                success: false,
+                message: "invalid Emal or Password"
+            });
+        }
+
+        const token = jwt.sign(
+            { id: user.id },
+            process.env.JWT_SECRET as string,
+            { expiresIn: "7d" }
+        );
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV as string === "production" ? true : false,
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000
         });
-    }
 
-    const isMatchPassword = await bcrypt.compare(bodyData.password, user.password);
-    if(!isMatchPassword){
-        return res.status(401).json({
-            success: false,
-            message: "invalid Emal or Password"
+        return res.json({
+            success: true,
+            message: "User Logged-In"
         });
-    }
-
-    const token = jwt.sign(
-        {id: user.id},
-        process.env.JWT_SECRET as string,
-        { expiresIn: "7d"}
-    );
-
-    res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV as string === "production"? true : false,
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000 
-    });
-
-    return res.json({
-        success: true,
-        message: "User Logged-In"
-    });
-    }catch(error){
+    } catch (error) {
         console.error("Login error: ", error);
         return res.status(500).json({
             success: false,
@@ -269,11 +269,11 @@ export const login = async (req: Request, res: Response) =>{
 
 // Logout 
 
-export const logout = (req: Request, res: Response) =>{
+export const logout = (req: Request, res: Response) => {
 
     res.clearCookie("token", {
         httpOnly: true,
-        secure: process.env.NODE_ENV as string === "production"? true : false,
+        secure: process.env.NODE_ENV as string === "production" ? true : false,
         sameSite: "lax"
     });
 
@@ -283,23 +283,17 @@ export const logout = (req: Request, res: Response) =>{
     })
 }
 
-export const getMe = async (req: Request, res: Response) =>{
+export const getMe = async (req: Request, res: Response) => {
 
-    const follows = await prisma.follow.findMany();
-
-console.log(follows);
-const user = await prisma.user.findUnique({
-  where: {
-    id: req.user.id
-  },
-  include: {
-    followers: true,
-    following: true
-  }
-});
-
-console.log("FOLLOWERS:", user?.followers);
-console.log("FOLLOWING:", user?.following);
+    const user = await prisma.user.findUnique({
+        where: {
+            id: req.user.id
+        },
+        include: {
+            followers: true,
+            following: true
+        }
+    });
 
     return res.json({
         success: true,
