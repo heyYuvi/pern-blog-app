@@ -7,6 +7,11 @@ import toast from "react-hot-toast";
 import Comments from "../components/Comments";
 
 
+interface LikeReponse {
+    likes: number;
+    likedByMe: boolean;
+}
+
 interface Author {
     id: string;
     avatar?: string | null;
@@ -76,6 +81,26 @@ const GlobalFeed = () => {
         ))
     }
 
+    const handleLike = async (id: number) =>{
+        try{
+            const { data } = await api.put<{data: LikeReponse}>(`/toggleLike/${id}`);
+
+            console.log("clicked", id);
+            console.log("response", data.data);
+        setPosts((prevPosts) => prevPosts.map((post) => Number(post.id) === id? {
+            ...post,
+            likes: data.data.likes,
+            likedByMe: data.data.likedByMe
+        } : post
+    )); 
+        }catch(error){
+            if(isAxiosError(error)){
+                toast.error(error.response?.data?.message || "Something Went Wrong");
+                console.error(error.response?.data?.message || "Something Went Wrong");
+            }
+        }
+    }
+
     useEffect(() => {
 
         const fetchPosts = async () => {
@@ -120,6 +145,8 @@ const GlobalFeed = () => {
                     <h2>{post.author.name}</h2>
                     {new Date(post.createdAt).toLocaleDateString()}
                     {new Date(post.updatedAt).toLocaleDateString()}
+                    <p>{post.likes}</p>
+                    <button onClick={() =>{handleLike(Number(post.id))}}>{post.likedByMe? "unlike" : "like"}</button>
                     <div>
                         {user?.id && (<button onClick={() =>{navigate(`/post/update/${post.id}`)}}>Update</button>)}
                         {user?.id && (<button onClick={() =>{handleDelete(Number(post.id))}}>Delete</button>)}

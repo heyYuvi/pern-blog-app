@@ -55,9 +55,18 @@ export const toggleLike = async (req: Request, res: Response) =>{
         });
     }
 
+    const likeCount = await prisma.like.count({
+        where: {
+            postId: id
+        }
+    })
+
     return res.json({
         success: true,
-        like: !alreadyLiked, 
+        data: {
+        likes: likeCount,
+        likedByMe: !alreadyLiked, 
+        }
     });
     }catch(error){
         console.error("Toggle Like error ", error);
