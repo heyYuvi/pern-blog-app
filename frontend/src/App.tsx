@@ -9,6 +9,7 @@ import CreatePost from './pages/CreatePost'
 import { Toaster } from 'react-hot-toast'
 import GlobalFeed from './pages/GlobalFeed'
 import UpdatePost from './pages/UpdatePost'
+import SinglePage from './pages/SinglePost'
 
 function App() {
 
@@ -22,6 +23,7 @@ function App() {
       <Route path='/' element={<ProtectedRoute><Home /></ProtectedRoute>} />
       <Route path='/post' element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
       <Route path='/global/feed' element={<ProtectedRoute><GlobalFeed /></ProtectedRoute>} />
+      <Route path='/single/page/:id' element={<ProtectedRoute><SinglePage /></ProtectedRoute>} />
       <Route path='/post/update/:id' element={<UpdatePost />} />
     </Routes>
     </>

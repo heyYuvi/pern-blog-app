@@ -138,9 +138,11 @@ const GlobalFeed = () => {
             </div>
             {posts.map((post) => (
                 <div key={post.id}>
+                    <div onClick={() =>{navigate(`/single/page/${Number(post.id)}`)}}>
                     <h1>{post.title}</h1>
                     <h2>{post.description}</h2>
                     {post.image && (<img src={post.image} alt={post.title} />)}
+                    </div>
                     {post.author.avatar && (<img src={post.author.avatar} alt={post.author.name} />)}
                     <h2>{post.author.name}</h2>
                     {new Date(post.createdAt).toLocaleDateString()}
@@ -148,8 +150,8 @@ const GlobalFeed = () => {
                     <p>{post.likes}</p>
                     <button onClick={() =>{handleLike(Number(post.id))}}>{post.likedByMe? "unlike" : "like"}</button>
                     <div>
-                        {user?.id && (<button onClick={() =>{navigate(`/post/update/${post.id}`)}}>Update</button>)}
-                        {user?.id && (<button onClick={() =>{handleDelete(Number(post.id))}}>Delete</button>)}
+                        {user?.id === Number(post.author.id) && (<button onClick={() =>{navigate(`/post/update/${post.id}`)}}>Update</button>)}
+                        {user?.id === Number(post.author.id) && (<button onClick={() =>{handleDelete(Number(post.id))}}>Delete</button>)}
                     </div>
                     <div>
                         <button onClick={() =>{setShowComments(

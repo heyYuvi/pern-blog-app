@@ -1,4 +1,4 @@
-import type { Request, response, Response} from "express";
+import type { Request, response, Response } from "express";
 import { createPostSchema, updatePostSchema, type CreatePostInput, type UpdatePostInput } from "../utils/validators.js";
 import { createUniqueSlug } from "../utils/slugify.js";
 import { prisma } from "../config/database.config.js";
@@ -6,70 +6,70 @@ import { uploadImage } from "../services/cloudinary.service.js";
 
 // Create Post
 
-export const createPost = async (req: Request, res: Response) =>{
-    try{
-      
-    const { success, data, error } = createPostSchema.safeParse(req.body);
+export const createPost = async (req: Request, res: Response) => {
+    try {
 
-    if(!success){
-        return res.status(400).json({
-            success: false,
-            error: error.issues
-        });
-    }
+        const { success, data, error } = createPostSchema.safeParse(req.body);
 
-    let imageUrl = null;
+        if (!success) {
+            return res.status(400).json({
+                success: false,
+                error: error.issues
+            });
+        }
 
-    if(req.file){
-        const result = await uploadImage(req.file.buffer);
-        imageUrl = result.secure_url;
-        console.log(imageUrl);
-    }
+        let imageUrl = null;
 
-    const bodyData: CreatePostInput = data;
-    
-    const slug = createUniqueSlug(bodyData.title);
+        if (req.file) {
+            const result = await uploadImage(req.file.buffer);
+            imageUrl = result.secure_url;
+            console.log(imageUrl);
+        }
 
-    const post = await prisma.post.create({
-        data: {
-            title: bodyData.title,
-            slug: slug,
-            description: bodyData.description ?? null,
-            image: imageUrl,
-            authorId: req.user.id
-        },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true
+        const bodyData: CreatePostInput = data;
+
+        const slug = createUniqueSlug(bodyData.title);
+
+        const post = await prisma.post.create({
+            data: {
+                title: bodyData.title,
+                slug: slug,
+                description: bodyData.description ?? null,
+                image: imageUrl,
+                authorId: req.user.id
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
                 }
             }
-        }
-    });
+        });
 
-    return res.status(201).json({
-        success: true,
-        message: "Post Created Successfully",
-        data: {
-            post: {
-                id: post.id,
-                title: post.title,
-                slug: post.slug,
-                description: post.description,
-                image: post.image,
-                author: {
-                    id: post.author.id,
-                    name: post.author.name,
-                    email: post.author.email
-                },
-                createdAt: post.createdAt,
-                updatedAt: post.updatedAt
+        return res.status(201).json({
+            success: true,
+            message: "Post Created Successfully",
+            data: {
+                post: {
+                    id: post.id,
+                    title: post.title,
+                    slug: post.slug,
+                    description: post.description,
+                    image: post.image,
+                    author: {
+                        id: post.author.id,
+                        name: post.author.name,
+                        email: post.author.email
+                    },
+                    createdAt: post.createdAt,
+                    updatedAt: post.updatedAt
+                }
             }
-        }
-    });
-    }catch(error){
+        });
+    } catch (error) {
         console.error("Create Post error: ", error);
         return res.status(500).json({
             success: false,
@@ -80,59 +80,18 @@ export const createPost = async (req: Request, res: Response) =>{
 
 // Get Global Posts
 
-export const getGlobalPosts  = async (req: Request, res: Response) =>{
-    try{
-        
-    const { search, page, limit  }= req.query;
+export const getGlobalPosts = async (req: Request, res: Response) => {
+    try {
 
-    const pageNumber = Number(page) || 1;
-    const limitNumber = Number(limit) || 4;
-    const skip = (pageNumber - 1) * limitNumber;
+        const { search, page, limit } = req.query;
 
-    const posts = await prisma.post.findMany({
-        where: {
-            ...(search? {
-                OR: [
-                    {
-                        title: {
-                            contains: search as string,
-                            mode: "insensitive"
-                        }
-                    },
-                    {
-                        description: {
-                            contains: search as string,
-                            mode: "insensitive"
-                        }
-                    }
-                ]
-            }: {}),
-        },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    avatar: true,
-                    name: true
-                }
-            },
-            likes: {
-                select: {
-                    authorId: true
-                }
-            }
-        },
-        orderBy: {
-            createdAt: "desc"
-        },
-        skip,
-        take: limitNumber
-        });
+        const pageNumber = Number(page) || 1;
+        const limitNumber = Number(limit) || 4;
+        const skip = (pageNumber - 1) * limitNumber;
 
-
-        const totalPosts = await prisma.post.count({
+        const posts = await prisma.post.findMany({
             where: {
-                ...(search? {
+                ...(search ? {
                     OR: [
                         {
                             title: {
@@ -147,39 +106,80 @@ export const getGlobalPosts  = async (req: Request, res: Response) =>{
                             }
                         }
                     ]
-                }: {})
+                } : {}),
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        avatar: true,
+                        name: true
+                    }
+                },
+                likes: {
+                    select: {
+                        authorId: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: "desc"
+            },
+            skip,
+            take: limitNumber
+        });
+
+
+        const totalPosts = await prisma.post.count({
+            where: {
+                ...(search ? {
+                    OR: [
+                        {
+                            title: {
+                                contains: search as string,
+                                mode: "insensitive"
+                            }
+                        },
+                        {
+                            description: {
+                                contains: search as string,
+                                mode: "insensitive"
+                            }
+                        }
+                    ]
+                } : {})
             }
         });
-        
-    return res.json({
-        success: true,
-        pagination: {
-            page: pageNumber,
-            limit: limitNumber,
-            skip: skip,
-            total: totalPosts,
-            totalPages: Math.ceil(totalPosts / limitNumber)
-        },
-        data: posts.map((post) =>({
-            id: post.id,
-            title: post.title,
-            description: post.description,
-            slug: post.slug,
-            image: post.image,
-            author: {
-                id: post.author.id,
-                avatar: post.author.avatar,
-                name: post.author.name
+
+        return res.json({
+            success: true,
+            pagination: {
+                page: pageNumber,
+                limit: limitNumber,
+                skip: skip,
+                total: totalPosts,
+                totalPages: Math.ceil(totalPosts / limitNumber)
             },
-            likes: post.likes.length,
-            likedByMe: post.likes.some((like) =>(
-                like.authorId === req.user.id
-            )),
-            createdAt: post.createdAt,
-            updatedAt: post.updatedAt
-        }))
-    });
-    }catch(error){
+            data: posts.map((post) => ({
+                id: post.id,
+                title: post.title,
+                description: post.description,
+                slug: post.slug,
+                image: post.image,
+                author: {
+                    id: post.author.id,
+                    avatar: post.author.avatar,
+                    name: post.author.name
+                },
+                likes: post.likes.length,
+                likedByMe: post.likes.some((like) => (
+                    like.authorId === req.user.id
+                )),
+                createdAt: post.createdAt,
+                updatedAt: post.updatedAt
+            }))
+        });
+    } catch (error) {
         console.error("Get Global Post error: ", error);
         return res.status(500).json({
             success: false,
@@ -191,89 +191,89 @@ export const getGlobalPosts  = async (req: Request, res: Response) =>{
 
 // Get post based on following
 
-export const feed = async (req: Request, res: Response) =>{
-    try{
-        
-    const { page, limit } = req.query;
+export const feed = async (req: Request, res: Response) => {
+    try {
 
-    const pageNumber = Number(page) || 1;
-    const limitNumber = Number(limit) || 4;
-    const skip = (pageNumber - 1) * limitNumber;
+        const { page, limit } = req.query;
 
-    const following = await prisma.follow.findMany({
-        where: {
-            followerId: req.user.id
-        },
-        select: {
-            followingId: true
-        }
-    });
+        const pageNumber = Number(page) || 1;
+        const limitNumber = Number(limit) || 4;
+        const skip = (pageNumber - 1) * limitNumber;
 
-    const followingIds = following.map((follow) =>(follow.followingId));
-
-    const posts = await prisma.post.findMany({
-        where: {
-            authorId: {
-                in: [...followingIds, req.user.id]
+        const following = await prisma.follow.findMany({
+            where: {
+                followerId: req.user.id
+            },
+            select: {
+                followingId: true
             }
-        },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    avatar: true,
-                    name: true,
-                    email: true,
+        });
+
+        const followingIds = following.map((follow) => (follow.followingId));
+
+        const posts = await prisma.post.findMany({
+            where: {
+                authorId: {
+                    in: [...followingIds, req.user.id]
                 }
             },
-            likes: {
-                select: {
-                    authorId: true
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        avatar: true,
+                        name: true,
+                        email: true,
+                    }
+                },
+                likes: {
+                    select: {
+                        authorId: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: "desc"
+            },
+            skip,
+            take: limitNumber
+        });
+
+        const totalPosts = await prisma.post.count({
+            where: {
+                authorId: {
+                    in: [...followingIds, req.user.id]
                 }
             }
-        },
-        orderBy: {
-            createdAt: "desc"
-        },
-        skip,
-        take: limitNumber
-    });
+        });
 
-    const totalPosts = await prisma.post.count({
-        where: {
-            authorId: {
-                in: [...followingIds, req.user.id]
-            }
-        }
-    });
-
-    return res.json({
-        success: true,
-        pagination: {
-            page: pageNumber,
-            limit: limitNumber,
-            total: totalPosts,
-            totalPages: Math.ceil(totalPosts / limitNumber)
-        },
-        data: posts.map((post) =>({
-            id: post.id,
-            title: post.title,
-            description: post.description,
-            image: post.image,
-            slug: post.slug,
-            likes: post.likes.length,
-            likedByMe: post.likes.some((like) =>(like.authorId === req.user.id)),
-            createdAt: post.createdAt,
-            updatedAt: post.updatedAt,
-            author: {
-                id: post.author.id,
-                avatar: post.author.avatar,
-                name: post.author.name,
-                email: post.author.email
-            }
-        }))
-    });
-    }catch(error){
+        return res.json({
+            success: true,
+            pagination: {
+                page: pageNumber,
+                limit: limitNumber,
+                total: totalPosts,
+                totalPages: Math.ceil(totalPosts / limitNumber)
+            },
+            data: posts.map((post) => ({
+                id: post.id,
+                title: post.title,
+                description: post.description,
+                image: post.image,
+                slug: post.slug,
+                likes: post.likes.length,
+                likedByMe: post.likes.some((like) => (like.authorId === req.user.id)),
+                createdAt: post.createdAt,
+                updatedAt: post.updatedAt,
+                author: {
+                    id: post.author.id,
+                    avatar: post.author.avatar,
+                    name: post.author.name,
+                    email: post.author.email
+                }
+            }))
+        });
+    } catch (error) {
         console.error("Get Feed error ", error);
         return res.status(500).json({
             success: false,
@@ -284,19 +284,20 @@ export const feed = async (req: Request, res: Response) =>{
 
 // Get single Post
 
-export const getSinglePost = async (req: Request, res: Response) =>{
+export const getSinglePost = async (req: Request, res: Response) => {
 
     const id = Number(req.params.id);
 
-    const post = await  prisma.post.findUnique({
+    const post = await prisma.post.findUnique({
         where: {
-            id: id 
+            id: id
         },
         include: {
             author: {
                 select: {
                     id: true,
                     name: true,
+                    email: true,
                     avatar: true
                 }
             },
@@ -308,7 +309,7 @@ export const getSinglePost = async (req: Request, res: Response) =>{
         }
     });
 
-    if(!post){
+    if (!post) {
         return res.status(404).json({
             success: false,
             message: "Post NOt Found"
@@ -326,12 +327,15 @@ export const getSinglePost = async (req: Request, res: Response) =>{
             author: {
                 id: post.author.id,
                 avatar: post.author.avatar,
-                name: post.author.name
+                name: post.author.name,
+                email: post.author.email
             },
-            likes: post.likes.length,
-            likedByMe: post.likes.some((like) =>(
-                like.authorId === req.user.id
-            )),
+            like: {
+                likes: post.likes.length,
+                likedByMe: post.likes.some((like) => (
+                    like.authorId === req.user.id
+                ))
+            },
             createdAt: post.createdAt,
             updatedAt: post.updatedAt
         }
@@ -340,9 +344,21 @@ export const getSinglePost = async (req: Request, res: Response) =>{
 
 // Delete Post
 
-export const deletePost = async (req: Request, res: Response) =>{
+export const deletePost = async (req: Request, res: Response) => {
 
     const id = Number(req.params.id);
+
+    await prisma.comment.deleteMany({
+        where: {
+            postId: id
+        }
+    });
+
+    await prisma.like.deleteMany({
+        where: {
+            postId: id
+        }
+    });
 
     const post = await prisma.post.delete({
         where: {
@@ -359,23 +375,23 @@ export const deletePost = async (req: Request, res: Response) =>{
 
 // Update Post 
 
-export const updatePost = async (req: Request, res: Response) =>{
+export const updatePost = async (req: Request, res: Response) => {
 
     const id = Number(req.params.id);
 
     const { success, data, error } = updatePostSchema.safeParse(req.body);
-    if(!success){
+    if (!success) {
         return res.status(400).json({
             success: false,
             error: error.issues
         });
     }
-    
+
     const bodyData: UpdatePostInput = data;
     let slug;
 
-    if(bodyData.title !== undefined){
-         slug  = createUniqueSlug(bodyData.title);
+    if (bodyData.title !== undefined) {
+        slug = createUniqueSlug(bodyData.title);
     }
 
     const post = await prisma.post.update({
@@ -386,7 +402,7 @@ export const updatePost = async (req: Request, res: Response) =>{
         data: {
             ...(bodyData.title !== undefined && { title: bodyData.title }),
             ...(bodyData.description !== undefined && { description: bodyData.description }),
-            ...(slug !== undefined && { slug: slug})
+            ...(slug !== undefined && { slug: slug })
         }
     });
 
