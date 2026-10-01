@@ -82,7 +82,8 @@ const SinglePage = () =>{
             </div>
             {user?.id === post?.author.id && (
                 <div>
-                <button onClick={() =>{handelDelete(Number(post?.id))}}>Delete</button>
+                {user?.id === post?.author.id && (<button onClick={() =>{handelDelete(Number(post?.id))}}>Delete</button>)}
+                {user?.id === post?.author.id && (<button onClick={() =>{navigate(`/single/post/${Number(post?.id)}`)}}>Edit</button>)} 
             </div>
             )}
         </div>

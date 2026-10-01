@@ -45,7 +45,7 @@ const UpdatePost = () =>{
         }catch(error){
             if(isAxiosError(error)){
             console.error(error.response?.data.data.message || "Something Went Wrong");
-                    toast.error(error.response?.data.data.message);
+                    toast.error(error.response?.data.data.message || "Something Went Wrong");
             }    
         }
     }
@@ -65,7 +65,7 @@ const UpdatePost = () =>{
             }catch(error){
                 if(isAxiosError(error)){
                     console.error(error.response?.data.message || "Something Went Wrong");
-                    toast.error(error.response?.data.message);
+                    toast.error(error.response?.data.message || "Something Went Wrong");
                 }
             }finally{
                 setLoading(false);
