@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import api from "../services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/useAuth";
+import Comments from "../components/Comments";
 
 interface LikeReponse {
     likes: number;
@@ -38,6 +39,7 @@ const SinglePage = () =>{
     const { id }  = useParams();
 
     const [post, setPost] = useState<PostResponse | null>(null);
+    const [showComments, setShowComments] = useState<number | null>(null);
 
     const handelDelete = async (postId: number) =>{
         toast((t) =>(
@@ -86,6 +88,12 @@ const SinglePage = () =>{
                 {user?.id === post?.author.id && (<button onClick={() =>{navigate(`/single/post/${Number(post?.id)}`)}}>Edit</button>)} 
             </div>
             )}
+            <div>
+                <button onClick={() =>{setShowComments(
+                    showComments === Number(post?.id)? null : Number(post?.id)
+                )}}>{showComments === Number(post?.id)? "Hide" : "Show"}</button>
+                {showComments === Number(post?.id) && (<Comments postId={Number(post?.id)}/>)}
+            </div>
         </div>
     )
 }
