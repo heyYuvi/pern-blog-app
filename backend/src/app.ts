@@ -7,6 +7,7 @@ import postRouter from "./routes/post.routes.js";
 import commentRouter from "./routes/comment.routes.js";
 import likeRouter from "./routes/like.routes.js";
 import followRouter from "./routes/follow.routes.js";
+import profileRouter from "./routes/profile.routes.js";
 
 const app = express();
 
@@ -31,5 +32,6 @@ app.use("/api", postRouter);
 app.use("/api", commentRouter);
 app.use("/api", likeRouter);
 app.use("/api", followRouter);
+app.use("/api", profileRouter);
 
 export default app;

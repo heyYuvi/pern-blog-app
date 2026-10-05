@@ -144,7 +144,7 @@ const GlobalFeed = () => {
                     {post.image && (<img src={post.image} alt={post.title} />)}
                     </div>
                     {post.author.avatar && (<img src={post.author.avatar} alt={post.author.name} />)}
-                    <h2>{post.author.name}</h2>
+                    <h2 onClick={() =>{navigate(`/profile/${Number(post.author.id)}`)}}>{post.author.name}</h2>
                     {new Date(post.createdAt).toLocaleDateString()}
                     {new Date(post.updatedAt).toLocaleDateString()}
                     <p>{post.likes}</p>

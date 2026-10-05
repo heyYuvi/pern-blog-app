@@ -11,6 +11,8 @@ import GlobalFeed from './pages/GlobalFeed'
 import UpdatePost from './pages/UpdatePost'
 import SinglePage from './pages/SinglePost'
 import SingleUpdatePost from './pages/SingleUpdatePost'
+import Profile from './pages/Profile'
+import EditProfile from './pages/UpdateProfile'
 
 function App() {
 
@@ -26,6 +28,8 @@ function App() {
       <Route path='/global/feed' element={<ProtectedRoute><GlobalFeed /></ProtectedRoute>} />
       <Route path='/single/page/:id' element={<ProtectedRoute><SinglePage /></ProtectedRoute>} />
       <Route path='/single/post/:id' element={<ProtectedRoute><SingleUpdatePost /></ProtectedRoute>} />
+      <Route path='/profile/:id' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path='/profile' element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
       <Route path='/post/update/:id' element={<UpdatePost />} />
     </Routes>
     </>

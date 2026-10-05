@@ -80,3 +80,14 @@ export const commentSchema = z.object({
 
 export type CommentInput = z.infer<typeof commentSchema>;
 
+export const updateProfileSchema = z.object({
+    name: z
+    .string()
+    .trim()
+    .max(50, "Name should not exceeds 50 characters")
+    .optional()
+});
+
+export type profileInput = z.infer<typeof updateProfileSchema>;
+
+

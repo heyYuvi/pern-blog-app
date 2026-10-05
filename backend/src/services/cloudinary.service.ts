@@ -14,3 +14,18 @@ export const uploadImage = async (buffer: Buffer): Promise<any> => {
         ).end(buffer);
     });
 };
+
+export const avatarUpload = async (buffer: Buffer): Promise<any> =>{
+    return new Promise((resolve, reject) =>{
+        cloudinary.uploader.upload_stream(
+            {
+                folder: '/blog-app/avatars',
+                resource_type: 'image'
+            },
+            (error, result) =>{
+                if(error) return reject(error);
+                return resolve(result);
+            }
+        ).end(buffer)
+    })
+};
