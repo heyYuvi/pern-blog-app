@@ -13,6 +13,8 @@ import SinglePage from './pages/SinglePost'
 import SingleUpdatePost from './pages/SingleUpdatePost'
 import Profile from './pages/Profile'
 import EditProfile from './pages/UpdateProfile'
+import VerifyEmail from './pages/VerifyEmail'
+import ResendToken from './pages/ResendToken'
 
 function App() {
 
@@ -30,6 +32,8 @@ function App() {
       <Route path='/single/post/:id' element={<ProtectedRoute><SingleUpdatePost /></ProtectedRoute>} />
       <Route path='/profile/:id' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path='/profile' element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+      <Route path='/verify-email/:token' element={<VerifyEmail />} />
+      <Route path='/resend-verification-token' element={<ResendToken />} />
       <Route path='/post/update/:id' element={<UpdatePost />} />
     </Routes>
     </>

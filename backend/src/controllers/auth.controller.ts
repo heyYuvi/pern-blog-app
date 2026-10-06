@@ -42,7 +42,11 @@ export const register = async (req: Request, res: Response) => {
 
         const verificationToken = randomBytes(32).toString("hex");
 
+        console.log("Original token:", verificationToken);
+
         const hashedVerificationToken = createHash('sha256').update(verificationToken).digest('hex');
+
+        console.log("Hashed token:", hashedVerificationToken);
 
         const verificationTokenExpiry = new Date(
             Date.now() + 1000 * 60 * 60
@@ -61,7 +65,7 @@ export const register = async (req: Request, res: Response) => {
 
         await sendEmail(bodyData.email, `Email Verification for the Blog Platform`, `<h1>Email Verification</h1>
             <p>Your verification token is: </p>
-            <strong>${verificationToken}</strong>
+            <strong>http://localhost:5173/verify-email/${verificationToken}</strong>
             `);
 
         return res.status(201).json({
@@ -86,14 +90,15 @@ export const emailVerification = async (req: Request, res: Response) => {
         });
     }
 
-    const hashVerifyEmail = createHash('sha256').update(verifyEmail).digest('hex');
 
+    const hashVerifyEmail = createHash('sha256').update(verifyEmail).digest('hex');
 
     const user = await prisma.user.findFirst({
         where: {
             verificationToken: hashVerifyEmail
         }
     });
+
 
     if (!user) {
         return res.status(400).json({
@@ -109,7 +114,7 @@ export const emailVerification = async (req: Request, res: Response) => {
         })
     }
 
-    await prisma.user.update({
+    const author = await prisma.user.update({
         where: {
             id: user.id
         },
@@ -122,7 +127,10 @@ export const emailVerification = async (req: Request, res: Response) => {
 
     return res.json({
         success: true,
-        message: "Email Verified Succesfully"
+        message: "Email Verified Succesfully",
+        data: {
+            isVerified: author.isVerified
+        }
     });
 }
 
@@ -138,6 +146,7 @@ export const resendVerificationToken = async (req: Request, res: Response) => {
                 error: error.issues
             });
         }
+        
 
         const bodyData: ResendVerificationTokenInput = data;
 
@@ -181,7 +190,7 @@ export const resendVerificationToken = async (req: Request, res: Response) => {
 
         await sendEmail(bodyData.email, `Email Verification for the Blog Platform`, `<h1>Email Verification</h1>
         <p>Your Verification Token is: </p>
-        <strong>${emailVerificationToken}</strong>
+        <strong>http://localhost:5173/verify-email/${emailVerificationToken}</strong>
         `)
 
         return res.json({
@@ -256,7 +265,7 @@ export const login = async (req: Request, res: Response) => {
 
         return res.json({
             success: true,
-            message: "User Logged-In"
+            message: "User Logged-In",
         });
     } catch (error) {
         console.error("Login error: ", error);

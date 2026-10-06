@@ -3,6 +3,7 @@ import api from "../services/api";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import toast from "react-hot-toast";
 
 
 interface LoginInput {
@@ -20,6 +21,8 @@ const Login = () =>{
         email: "",
         password: ""
     });
+
+    const [showResend, setShowResend] = useState<boolean>(false);
 
     const  [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -50,8 +53,12 @@ const Login = () =>{
             navigate("/");
         }catch(error){
             if(isAxiosError(error)){
+                if(error.response?.data?.message === "Please verify your email."){
+                    setShowResend(true);
+                }
+                toast.error(error.response?.data?.message || "Login Error");
+                console.log(error.response?.data?.message);
                 setError(error.response?.data?.message || "Login Error");
-                            console.log(error);
             } else{
                 setError("Something Went Wrong");
             }
@@ -75,6 +82,7 @@ const Login = () =>{
             <div>
                 {error && <p>{error}</p>}
             </div>
+            {showResend === true && <button onClick={() =>{navigate("/resend-verification-token")}}>ResendToken</button>}
         </div>
     )
 }
