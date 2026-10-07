@@ -15,6 +15,7 @@ import Profile from './pages/Profile'
 import EditProfile from './pages/UpdateProfile'
 import VerifyEmail from './pages/VerifyEmail'
 import ResendToken from './pages/ResendToken'
+import Feed from './pages/Feed'
 
 function App() {
 
@@ -28,6 +29,7 @@ function App() {
       <Route path='/' element={<ProtectedRoute><Home /></ProtectedRoute>} />
       <Route path='/post' element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
       <Route path='/global/feed' element={<ProtectedRoute><GlobalFeed /></ProtectedRoute>} />
+      <Route path='/following/feed' element={<ProtectedRoute><Feed /></ProtectedRoute>} />
       <Route path='/single/page/:id' element={<ProtectedRoute><SinglePage /></ProtectedRoute>} />
       <Route path='/single/post/:id' element={<ProtectedRoute><SingleUpdatePost /></ProtectedRoute>} />
       <Route path='/profile/:id' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
