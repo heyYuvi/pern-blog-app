@@ -152,7 +152,7 @@ export const getGlobalPosts = async (req: Request, res: Response) => {
         });
 
         return res.json({
-            success: true,
+            success: true,  
             pagination: {
                 page: pageNumber,
                 limit: limitNumber,
